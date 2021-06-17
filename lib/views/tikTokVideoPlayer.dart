@@ -9,6 +9,7 @@ import 'package:video_player/video_player.dart';
 //   VideoInfo(this.url, this.title);
 // }
 
+// TODO: 实现无限往下播视频
 class VideoListController extends ChangeNotifier {
   /// 构造方法
   VideoListController();
@@ -39,16 +40,16 @@ class VideoListController extends ChangeNotifier {
   /// 视频总数目
   int get videoCount => playerList.length;
 
-  /// 在当前的list后面继续增加视频，并预加载封面
+  /// 添加视频
   addVideoInfo(List<UserVideo> list) async {
-    await Future.wait(list.map(
+    playerList.addAll(await Future.wait(list.map(
       (info) async {
         var player = VideoPlayerController.network(info.url);
         player.setLooping(true);
         await player.initialize();
-        playerList.add(player);
+        return player;
       },
-    ));
+    )));
   }
 
   /// 初始化
