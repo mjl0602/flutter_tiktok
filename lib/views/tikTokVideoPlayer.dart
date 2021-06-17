@@ -9,27 +9,28 @@ import 'package:video_player/video_player.dart';
 //   VideoInfo(this.url, this.title);
 // }
 
-class VideoListController {
+class VideoListController extends ChangeNotifier {
   /// 构造方法
   VideoListController();
 
-  /// 捕捉滑动，实现翻页
-  void setPageContrller(PageController pageController) {
-    pageController.addListener(() {
-      var p = pageController.page!;
-      if (p % 1 == 0) {
-        int target = p ~/ 1;
-        if (index.value == target) return;
-        // 播放当前的，暂停其他的
-        var oldIndex = index.value;
-        var newIndex = target;
-        playerOfIndex(oldIndex).seekTo(Duration.zero);
-        playerOfIndex(oldIndex).pause();
-        playerOfIndex(newIndex).play();
-        // 完成
-        index.value = target;
-      }
-    });
+  loadIndex(int target) {
+    if (index.value == target) return;
+    // 播放当前的，暂停其他的
+    var oldIndex = index.value;
+    var newIndex = target;
+    if (!(oldIndex == 0 && newIndex == 0)) {
+      playerOfIndex(oldIndex).seekTo(Duration.zero);
+      playerOfIndex(oldIndex).pause();
+      playerOfIndex(oldIndex).removeListener(_didUpdateValue);
+    }
+    playerOfIndex(newIndex).play();
+    playerOfIndex(newIndex).addListener(_didUpdateValue);
+    // 完成
+    index.value = target;
+  }
+
+  _didUpdateValue() {
+    notifyListeners();
   }
 
   /// 获取指定index的player
@@ -39,21 +40,28 @@ class VideoListController {
   int get videoCount => playerList.length;
 
   /// 在当前的list后面继续增加视频，并预加载封面
-  addVideoInfo(List<UserVideo> list) {
-    for (var info in list) {
-      var player = VideoPlayerController.network(
-        info.url,
-      );
-      player.setLooping(true);
-      player.initialize();
-      playerList.add(player);
-    }
+  addVideoInfo(List<UserVideo> list) async {
+    await Future.wait(list.map(
+      (info) async {
+        var player = VideoPlayerController.network(info.url);
+        player.setLooping(true);
+        await player.initialize();
+        playerList.add(player);
+      },
+    ));
   }
 
   /// 初始化
-  init(PageController pageController, List<UserVideo> initialList) {
-    addVideoInfo(initialList);
-    setPageContrller(pageController);
+  init(PageController pageController, List<UserVideo> initialList) async {
+    await addVideoInfo(initialList);
+    pageController.addListener(() {
+      var p = pageController.page!;
+      if (p % 1 == 0) {
+        loadIndex(p ~/ 1);
+      }
+    });
+    playerList.first.play();
+    notifyListeners();
   }
 
   /// 目前的视频序号
@@ -74,5 +82,6 @@ class VideoListController {
       player.dispose();
     }
     playerList = [];
+    super.dispose();
   }
 }

@@ -61,6 +61,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       _pageController,
       videoDataList,
     );
+    _videoListController.addListener(() {
+      setState(() {});
+    });
     tkController.addListener(
       () {
         if (tkController.value == TikTokPagePositon.middle) {

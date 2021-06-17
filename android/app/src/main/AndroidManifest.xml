@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.oversketch.flutter_tiktok">
+   <uses-permission android:name="android.permission.INTERNET"/>
    <application
         android:label="flutter_tiktok"
         android:icon="@mipmap/ic_launcher">
