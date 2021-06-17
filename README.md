@@ -2,7 +2,12 @@
 
 仿写抖音的flutter app。主要实现了看视频功能  
 
-支持空安全，支持flutter web
+
+## 2021年6月17日更新
+- 使用flutter2.2重新创建项目
+- 改用video player
+- 支持空安全
+- 支持flutter web
 
 # 实现功能
 
