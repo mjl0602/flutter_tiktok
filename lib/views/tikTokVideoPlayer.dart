@@ -1,5 +1,6 @@
 import 'package:flutter_tiktok/mock/video.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tiktok/other/pageView.dart';
 import 'package:video_player/video_player.dart';
 
 // class VideoInfo {
@@ -53,7 +54,7 @@ class VideoListController extends ChangeNotifier {
   }
 
   /// 初始化
-  init(PageController pageController, List<UserVideo> initialList) async {
+  init(TikTokPageController pageController, List<UserVideo> initialList) async {
     await addVideoInfo(initialList);
     pageController.addListener(() {
       var p = pageController.page!;
