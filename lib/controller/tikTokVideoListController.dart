@@ -215,6 +215,7 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
     var completer = Completer<void>();
     _actLocks.add(completer.future);
     await this.controller.initialize();
+    await this.controller.setLooping(true);
     afterInit ??= this._afterInit;
     await afterInit?.call(this.controller);
     _prepared = true;
