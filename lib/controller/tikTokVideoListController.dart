@@ -26,8 +26,10 @@ class TikTokVideoListController extends ChangeNotifier {
   /// 提供视频的builder
   LoadMoreVideo? _videoProvider;
 
-  loadIndex(int target) {
-    if (index.value == target) return;
+  loadIndex(int target, {bool reload = false}) {
+    if (!reload) {
+      if (index.value == target) return;
+    }
     // 播放当前的，暂停其他的
     var oldIndex = index.value;
     var newIndex = target;
@@ -35,15 +37,15 @@ class TikTokVideoListController extends ChangeNotifier {
     // 暂停之前的视频
     if (!(oldIndex == 0 && newIndex == 0)) {
       playerOfIndex(oldIndex)?.controller.seekTo(Duration.zero);
-      playerOfIndex(oldIndex)?.pause();
       playerOfIndex(oldIndex)?.controller.addListener(_didUpdateValue);
       playerOfIndex(oldIndex)?.showPauseIcon.addListener(_didUpdateValue);
+      playerOfIndex(oldIndex)?.pause();
       print('暂停$oldIndex');
     }
     // 开始播放当前的视频
-    playerOfIndex(newIndex)?.play();
     playerOfIndex(newIndex)?.controller.addListener(_didUpdateValue);
     playerOfIndex(newIndex)?.showPauseIcon.addListener(_didUpdateValue);
+    playerOfIndex(newIndex)?.play();
     print('播放$newIndex');
     // 处理预加载/释放内存
     for (var i = 0; i < playerList.length; i++) {
@@ -104,7 +106,7 @@ class TikTokVideoListController extends ChangeNotifier {
         loadIndex(p ~/ 1);
       }
     });
-    playerList.first.play();
+    loadIndex(0, reload: true);
     notifyListeners();
   }
 
@@ -221,9 +223,9 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
   @override
   Future<void> pause({bool showPauseIcon: false}) async {
     await Future.wait(_actLocks);
-    if (!prepared) return;
-    await init();
     _actLocks.clear();
+    await init();
+    if (!prepared) return;
     if (_disposeLock != null) {
       await _disposeLock?.future;
     }
@@ -236,9 +238,9 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
   @override
   Future<void> play() async {
     await Future.wait(_actLocks);
-    if (!prepared) return;
-    await init();
     _actLocks.clear();
+    await init();
+    if (!prepared) return;
     if (_disposeLock != null) {
       await _disposeLock?.future;
     }
