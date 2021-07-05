@@ -221,7 +221,8 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
   @override
   Future<void> pause({bool showPauseIcon: false}) async {
     await Future.wait(_actLocks);
-    if (!prepared) await init();
+    if (!prepared) return;
+    await init();
     _actLocks.clear();
     if (_disposeLock != null) {
       await _disposeLock?.future;
@@ -235,7 +236,8 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
   @override
   Future<void> play() async {
     await Future.wait(_actLocks);
-    if (!prepared) await init();
+    if (!prepared) return;
+    await init();
     _actLocks.clear();
     if (_disposeLock != null) {
       await _disposeLock?.future;
