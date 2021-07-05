@@ -9,7 +9,7 @@ import 'package:flutter_tiktok/views/tikTokHeader.dart';
 import 'package:flutter_tiktok/views/tikTokScaffold.dart';
 import 'package:flutter_tiktok/views/tikTokVideo.dart';
 import 'package:flutter_tiktok/views/tikTokVideoButtonColumn.dart';
-import 'package:flutter_tiktok/views/tikTokVideoPlayer.dart';
+import 'package:flutter_tiktok/controller/tikTokVideoListController.dart';
 import 'package:flutter_tiktok/views/tiktokTabBar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   TikTokPageController _pageController = TikTokPageController();
 
-  VideoListController _videoListController = VideoListController();
+  TikTokVideoListController _videoListController = TikTokVideoListController();
 
   /// 记录点赞
   Map<int, bool> favoriteMap = {};
@@ -59,8 +59,25 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     videoDataList = UserVideo.fetchVideo();
     WidgetsBinding.instance!.addObserver(this);
     _videoListController.init(
-      _pageController,
-      videoDataList,
+      pageController: _pageController,
+      initialList: videoDataList
+          .map(
+            (e) => VPVideoController(
+              videoInfo: e,
+              builder: () => VideoPlayerController.network(e.url),
+            ),
+          )
+          .toList(),
+      videoProvider: (int index, List<VPVideoController> list) async {
+        return videoDataList
+            .map(
+              (e) => VPVideoController(
+                videoInfo: e,
+                builder: () => VideoPlayerController.network(e.url),
+              ),
+            )
+            .toList();
+      },
     );
     _videoListController.addListener(() {
       setState(() {});
@@ -165,9 +182,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             itemCount: _videoListController.videoCount,
             itemBuilder: (context, i) {
               // 拼一个视频组件出来
-              var data = videoDataList[i];
               bool isF = SafeMap(favoriteMap)[i].boolean ?? false;
-              var player = _videoListController.playerOfIndex(i);
+              var player = _videoListController.playerOfIndex(i)!;
+              var data = player.videoInfo!;
               // 右侧按钮列
               Widget buttons = TikTokButtonColumn(
                 isFavorite: isF,
@@ -193,14 +210,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               // video
               Widget currentVideo = Center(
                 child: AspectRatio(
-                  aspectRatio: player.value.aspectRatio,
-                  child: VideoPlayer(player),
+                  aspectRatio: player.controller.value.aspectRatio,
+                  child: VideoPlayer(player.controller),
                 ),
               );
 
               currentVideo = TikTokVideoPage(
-                // TODO: 手势播放与自然播放都会产生暂停按钮状态变化，待处理
-                hidePauseIcon: true,
+                // 手势播放与自然播放都会产生暂停按钮状态变化，待处理
+                hidePauseIcon: !player.showPauseIcon.value,
                 aspectRatio: 9 / 16.0,
                 key: Key(data.url + '$i'),
                 tag: data.url,
@@ -210,7 +227,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   bottomPadding: hasBottomPadding ? 16.0 : 50.0,
                 ),
                 onSingleTap: () async {
-                  if (player.value.isPlaying) {
+                  if (player.controller.value.isPlaying) {
                     await player.pause();
                   } else {
                     await player.play();
