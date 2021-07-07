@@ -128,6 +128,7 @@ class TikTokVideoListController extends ChangeNotifier {
   void dispose() {
     // 销毁全部
     for (var player in playerList) {
+      player.showPauseIcon.dispose();
       player.dispose();
     }
     playerList = [];
