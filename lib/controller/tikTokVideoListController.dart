@@ -42,8 +42,8 @@ class TikTokVideoListController extends ChangeNotifier {
     // 暂停之前的视频
     if (!(oldIndex == 0 && newIndex == 0)) {
       playerOfIndex(oldIndex)?.controller.seekTo(Duration.zero);
-      playerOfIndex(oldIndex)?.controller.addListener(_didUpdateValue);
-      playerOfIndex(oldIndex)?.showPauseIcon.addListener(_didUpdateValue);
+      // playerOfIndex(oldIndex)?.controller.addListener(_didUpdateValue);
+      // playerOfIndex(oldIndex)?.showPauseIcon.addListener(_didUpdateValue);
       playerOfIndex(oldIndex)?.pause();
       print('暂停$oldIndex');
     }
