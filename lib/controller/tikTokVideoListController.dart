@@ -55,7 +55,7 @@ class TikTokVideoListController extends ChangeNotifier {
     // 处理预加载/释放内存
     for (var i = 0; i < playerList.length; i++) {
       // 需要释放[disposeCount]之前的视频
-      if (i < newIndex - disposeCount) {
+      if (i < newIndex - disposeCount || i > newIndex + disposeCount) {
         print('释放$i');
         playerOfIndex(i)?.controller.removeListener(_didUpdateValue);
         playerOfIndex(i)?.showPauseIcon.removeListener(_didUpdateValue);
