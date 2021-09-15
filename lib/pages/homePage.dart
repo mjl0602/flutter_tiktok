@@ -1,9 +1,9 @@
 import 'package:flutter_tiktok/mock/video.dart';
-import 'package:flutter_tiktok/other/pageView.dart';
 import 'package:flutter_tiktok/pages/cameraPage.dart';
 import 'package:flutter_tiktok/pages/followPage.dart';
 import 'package:flutter_tiktok/pages/searchPage.dart';
 import 'package:flutter_tiktok/pages/userPage.dart';
+import 'package:flutter_tiktok/style/physics.dart';
 import 'package:flutter_tiktok/views/tikTokCommentBottomSheet.dart';
 import 'package:flutter_tiktok/views/tikTokHeader.dart';
 import 'package:flutter_tiktok/views/tikTokScaffold.dart';
@@ -31,7 +31,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   TikTokScaffoldController tkController = TikTokScaffoldController();
 
-  TikTokPageController _pageController = TikTokPageController();
+  PageController _pageController = PageController();
 
   TikTokVideoListController _videoListController = TikTokVideoListController();
 
@@ -175,8 +175,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       page: Stack(
         // index: currentPage == null ? 0 : 1,
         children: <Widget>[
-          TikTokPageView.builder(
+          PageView.builder(
             key: Key('home'),
+            physics: QuickerScrollPhysics(),
             controller: _pageController,
             scrollDirection: Axis.vertical,
             itemCount: _videoListController.videoCount,

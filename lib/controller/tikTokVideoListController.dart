@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_tiktok/mock/video.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_tiktok/other/pageView.dart';
 import 'package:video_player/video_player.dart';
 
 typedef LoadMoreVideo = Future<List<VPVideoController>> Function(
@@ -99,7 +98,7 @@ class TikTokVideoListController extends ChangeNotifier {
 
   /// 初始化
   init({
-    required TikTokPageController pageController,
+    required PageController pageController,
     required List<VPVideoController> initialList,
     required LoadMoreVideo videoProvider,
   }) async {
