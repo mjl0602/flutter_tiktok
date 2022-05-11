@@ -11,7 +11,6 @@ import 'package:flutter_tiktok/views/tikTokVideo.dart';
 import 'package:flutter_tiktok/views/tikTokVideoButtonColumn.dart';
 import 'package:flutter_tiktok/controller/tikTokVideoListController.dart';
 import 'package:flutter_tiktok/views/tiktokTabBar.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:safemap/safemap.dart';
 import 'package:video_player/video_player.dart';
@@ -183,7 +182,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             itemCount: _videoListController.videoCount,
             itemBuilder: (context, i) {
               // 拼一个视频组件出来
-              bool isF = SafeMap(favoriteMap)[i].boolean ?? false;
+              bool isF = SafeMap(favoriteMap)[i].boolean;
               var player = _videoListController.playerOfIndex(i)!;
               var data = player.videoInfo!;
               // 右侧按钮列

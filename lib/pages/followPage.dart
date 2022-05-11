@@ -30,7 +30,7 @@ class _FollowPageState extends State<FollowPage> {
       ),
       itemCount: 10,
       itemBuilder: (ctx, i) {
-        bool isF = SafeMap(fMap)[i].boolean ?? false;
+        bool isF = SafeMap(fMap)[i].boolean;
         return FollowRow(
           isFavorite: isF,
           onFavorite: () {

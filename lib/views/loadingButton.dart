@@ -1,7 +1,6 @@
 import 'package:flutter_tiktok/style/text.dart';
 import 'package:flutter_tiktok/style/style.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:tapped/tapped.dart';
 
 class AdMusicLoadingButton extends StatelessWidget {

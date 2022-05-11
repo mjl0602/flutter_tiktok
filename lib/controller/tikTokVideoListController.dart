@@ -15,7 +15,7 @@ class TikTokVideoListController extends ChangeNotifier {
   TikTokVideoListController({
     this.loadMoreCount = 1,
     this.preloadCount = 3,
-    this.disposeCount = 5,
+    this.disposeCount = 0, // TODO: VideoPlayer有bug(安卓)，当前只能设置为0
   });
 
   /// 到第几个触发预加载，例如：1:最后一个，2:倒数第二个
@@ -182,27 +182,38 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
     return _controller!;
   }
 
-  /// 阻止在init的时候dispose，或者在dispose前init
-  List<Future> _actLocks = [];
-
   bool get isDispose => _disposeLock != null;
   bool get prepared => _prepared;
   bool _prepared = false;
 
   Completer<void>? _disposeLock;
 
+  /// 异步方法并发锁
+  Completer<void>? _syncLock;
+
+  /// 防止异步方法并发
+  Future<void> _syncCall(Future Function()? fn) async {
+    // 设置同步等待
+    var lastCompleter = _syncLock;
+    var completer = Completer<void>();
+    _syncLock = completer;
+    // 等待其他同步任务完成
+    await lastCompleter?.future;
+    // 主任务
+    await fn?.call();
+    // 结束
+    completer.complete();
+  }
+
   @override
   Future<void> dispose() async {
     if (!prepared) return;
-    await Future.wait(_actLocks);
-    _actLocks.clear();
-    var completer = Completer<void>();
-    _actLocks.add(completer.future);
     _prepared = false;
-    await this.controller.dispose();
-    _controller = null;
-    _disposeLock = Completer<void>();
-    completer.complete();
+    await _syncCall(() async {
+      await this.controller.dispose();
+      _controller = null;
+      _disposeLock = Completer<void>();
+    });
   }
 
   @override
@@ -210,16 +221,13 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
     ControllerSetter<VideoPlayerController>? afterInit,
   }) async {
     if (prepared) return;
-    await Future.wait(_actLocks);
-    _actLocks.clear();
-    var completer = Completer<void>();
-    _actLocks.add(completer.future);
-    await this.controller.initialize();
-    await this.controller.setLooping(true);
-    afterInit ??= this._afterInit;
-    await afterInit?.call(this.controller);
-    _prepared = true;
-    completer.complete();
+    await _syncCall(() async {
+      await this.controller.initialize();
+      await this.controller.setLooping(true);
+      afterInit ??= this._afterInit;
+      await afterInit?.call(this.controller);
+      _prepared = true;
+    });
     if (_disposeLock != null) {
       _disposeLock?.complete();
       _disposeLock = null;
@@ -228,8 +236,6 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
 
   @override
   Future<void> pause({bool showPauseIcon: false}) async {
-    await Future.wait(_actLocks);
-    _actLocks.clear();
     await init();
     if (!prepared) return;
     if (_disposeLock != null) {
@@ -241,8 +247,6 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
 
   @override
   Future<void> play() async {
-    await Future.wait(_actLocks);
-    _actLocks.clear();
     await init();
     if (!prepared) return;
     if (_disposeLock != null) {

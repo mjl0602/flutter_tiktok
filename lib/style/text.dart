@@ -83,7 +83,7 @@ class AdMucisText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // TODO: 用于修正字体偏移无法对齐,注意：如判断字体为中文等，需禁用偏移
+      // NOTE: 用于修正字体偏移无法对齐,注意：如判断字体为中文等，需禁用偏移
       padding: EdgeInsets.only(top: offset),
       child: DefaultTextStyle(
         style: defaultStyle!,
