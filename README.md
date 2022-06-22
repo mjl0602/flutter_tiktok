@@ -9,6 +9,12 @@
 2. **不能无限滑视频/播放器性能有问题**：已添加对应功能（./lib/controller/tikTokVideoListController.dart）。
 3. **UI性能问题**：在安卓和iOS上，本项目都非常丝滑，没有性能问题。在web上会比较卡，在移动端尤其卡，是因为flutter web本身性能有限，坐等官方优化。
 
+有其他问题也可以加群反馈
+
+<a target="_blank" href="https://jq.qq.com/?_wv=1027&k=5bcc0gy"><img border="0" src="https://pub.idqqimg.com/wpa/images/group.png" alt="FlutterCandies" title="FlutterCandies"></a>
+
+进群需要回答基础知识问题。
+
 ## 2021年7月5日更新
 - 现在支持无限下拉加载视频，会动态的新增播放器，控制内存占用
 - 现在支持释放之前的播放器，并支持在往回滑动时重新init(不依赖widget生命周期)
