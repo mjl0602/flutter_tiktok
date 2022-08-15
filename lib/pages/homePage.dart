@@ -48,7 +48,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    WidgetsBinding.instance!.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     _videoListController.currentPlayer.pause();
     super.dispose();
   }
@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void initState() {
     videoDataList = UserVideo.fetchVideo();
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     _videoListController.init(
       pageController: _pageController,
       initialList: videoDataList

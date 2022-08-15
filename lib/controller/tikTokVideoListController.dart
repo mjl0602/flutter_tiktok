@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter_tiktok/mock/video.dart';
 import 'package:flutter/material.dart';
@@ -14,8 +15,12 @@ typedef LoadMoreVideo = Future<List<VPVideoController>> Function(
 class TikTokVideoListController extends ChangeNotifier {
   TikTokVideoListController({
     this.loadMoreCount = 1,
-    this.preloadCount = 3,
-    this.disposeCount = 0, // TODO: VideoPlayer有bug(安卓)，当前只能设置为0
+    this.preloadCount = 2,
+
+    /// TODO: VideoPlayer有bug(安卓)，当前只能设置为0
+    /// 设置为0后，任何不在画面内的视频都会被释放
+    /// 若不设置为0，安卓将会无法加载第三个开始的视频
+    this.disposeCount = 0,
   });
 
   /// 到第几个触发预加载，例如：1:最后一个，2:倒数第二个
@@ -53,18 +58,21 @@ class TikTokVideoListController extends ChangeNotifier {
     print('播放$newIndex');
     // 处理预加载/释放内存
     for (var i = 0; i < playerList.length; i++) {
-      // 需要释放[disposeCount]之前的视频
-      if (i < newIndex - disposeCount || i > newIndex + disposeCount) {
+      /// 需要释放[disposeCount]之前的视频
+      /// i < newIndex - disposeCount 向下滑动时释放视频
+      /// i > newIndex + disposeCount 向上滑动，同时避免disposeCount设置为0时失去视频预加载功能
+      if (i < newIndex - disposeCount || i > newIndex + max(disposeCount, 2)) {
         print('释放$i');
         playerOfIndex(i)?.controller.removeListener(_didUpdateValue);
         playerOfIndex(i)?.showPauseIcon.removeListener(_didUpdateValue);
         playerOfIndex(i)?.dispose();
-      } else {
-        // 需要预加载
-        if (i > newIndex && i < newIndex + preloadCount) {
-          print('预加载$i');
-          playerOfIndex(i)?.init();
-        }
+        continue;
+      }
+      // 需要预加载
+      if (i > newIndex && i < newIndex + preloadCount) {
+        print('预加载$i');
+        playerOfIndex(i)?.init();
+        continue;
       }
     }
     // 快到最底部，添加更多视频
@@ -159,6 +167,9 @@ abstract class TikTokVideoController<T> {
   Future<void> pause({bool showPauseIcon: false});
 }
 
+/// 异步方法并发锁
+Completer<void>? _syncLock;
+
 class VPVideoController extends TikTokVideoController<VideoPlayerController> {
   VideoPlayerController? _controller;
   ValueNotifier<bool> _showPauseIcon = ValueNotifier<bool>(false);
@@ -188,9 +199,6 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
 
   Completer<void>? _disposeLock;
 
-  /// 异步方法并发锁
-  Completer<void>? _syncLock;
-
   /// 防止异步方法并发
   Future<void> _syncCall(Future Function()? fn) async {
     // 设置同步等待
@@ -210,8 +218,10 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
     if (!prepared) return;
     _prepared = false;
     await _syncCall(() async {
+      print('+++dispose ${this.hashCode}');
       await this.controller.dispose();
       _controller = null;
+      print('+++==dispose ${this.hashCode}');
       _disposeLock = Completer<void>();
     });
   }
@@ -222,10 +232,12 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
   }) async {
     if (prepared) return;
     await _syncCall(() async {
+      print('+++initialize ${this.hashCode}');
       await this.controller.initialize();
       await this.controller.setLooping(true);
       afterInit ??= this._afterInit;
       await afterInit?.call(this.controller);
+      print('+++==initialize ${this.hashCode}');
       _prepared = true;
     });
     if (_disposeLock != null) {
