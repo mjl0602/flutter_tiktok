@@ -12,6 +12,7 @@
 
 以下为正在开发中，计划支持的功能：
 
+- 在iOS/Android系统上重新启用fijkplayer
 - 支持MacOS系统
 - 支持Linux系统
 - 支持Windows系统
