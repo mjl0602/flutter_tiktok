@@ -2,6 +2,7 @@ import 'package:flutter_tiktok/pages/homePage.dart';
 import 'package:flutter_tiktok/style/style.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:media_kit/media_kit.dart';
 
 void main() {
   /// 自定义报错页面
@@ -17,6 +18,7 @@ void main() {
       );
     };
   }
+  MediaKit.ensureInitialized();
   runApp(MyApp());
 }
 
@@ -29,15 +31,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         hintColor: Colors.white,
-        accentColor: Colors.white,
         primaryColor: ColorPlate.orange,
-        primaryColorBrightness: Brightness.dark,
         scaffoldBackgroundColor: ColorPlate.back1,
         dialogBackgroundColor: ColorPlate.back2,
-        accentColorBrightness: Brightness.light,
-        textTheme: TextTheme(
-          bodyText1: StandardTextStyle.normal,
-        ),
       ),
       home: HomePage(),
     );

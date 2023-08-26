@@ -12,8 +12,9 @@ import 'package:flutter_tiktok/views/tikTokVideoButtonColumn.dart';
 import 'package:flutter_tiktok/controller/tikTokVideoListController.dart';
 import 'package:flutter_tiktok/views/tiktokTabBar.dart';
 import 'package:flutter/material.dart';
+import 'package:media_kit/media_kit.dart';
+import 'package:media_kit_video/media_kit_video.dart';
 import 'package:safemap/safemap.dart';
-import 'package:video_player/video_player.dart';
 
 import 'msgPage.dart';
 
@@ -32,7 +33,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   PageController _pageController = PageController();
 
-  TikTokVideoListController _videoListController = TikTokVideoListController();
+  TikTokVideoListController _videoListController = TikTokVideoListController(
+    loadMoreCount: 5,
+    disposeCount: 0,
+    preloadCount: 0,
+  );
 
   /// 记录点赞
   Map<int, bool> favoriteMap = {};
@@ -61,18 +66,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       pageController: _pageController,
       initialList: videoDataList
           .map(
-            (e) => VPVideoController(
+            (e) => MKVideoController(
               videoInfo: e,
-              builder: () => VideoPlayerController.network(e.url),
+              builder: () => Player(),
             ),
           )
           .toList(),
-      videoProvider: (int index, List<VPVideoController> list) async {
+      videoProvider: (int index, List<MKVideoController> list) async {
         return videoDataList
             .map(
-              (e) => VPVideoController(
+              (e) => MKVideoController(
                 videoInfo: e,
-                builder: () => VideoPlayerController.network(e.url),
+                builder: () => Player(),
               ),
             )
             .toList();
@@ -210,8 +215,16 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               // video
               Widget currentVideo = Center(
                 child: AspectRatio(
-                  aspectRatio: player.controller.value.aspectRatio,
-                  child: VideoPlayer(player.controller),
+                  aspectRatio: 1,
+                  child: Video(
+                    controller: VideoController(
+                      player.controller,
+                      configuration: VideoControllerConfiguration(
+                        height: 500,
+                        width: 500,
+                      ),
+                    ),
+                  ),
                 ),
               );
 
@@ -227,7 +240,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   bottomPadding: hasBottomPadding ? 16.0 : 50.0,
                 ),
                 onSingleTap: () async {
-                  if (player.controller.value.isPlaying) {
+                  if (player.controller.state.playing) {
                     await player.pause();
                   } else {
                     await player.play();

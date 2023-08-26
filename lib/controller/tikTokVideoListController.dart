@@ -3,11 +3,11 @@ import 'dart:math';
 
 import 'package:flutter_tiktok/mock/video.dart';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:media_kit/media_kit.dart';
 
-typedef LoadMoreVideo = Future<List<VPVideoController>> Function(
+typedef LoadMoreVideo = Future<List<MKVideoController>> Function(
   int index,
-  List<VPVideoController> list,
+  List<MKVideoController> list,
 );
 
 /// TikTokVideoListController是一系列视频的控制器，内部管理了视频控制器数组
@@ -45,14 +45,16 @@ class TikTokVideoListController extends ChangeNotifier {
 
     // 暂停之前的视频
     if (!(oldIndex == 0 && newIndex == 0)) {
-      playerOfIndex(oldIndex)?.controller.seekTo(Duration.zero);
+      playerOfIndex(oldIndex)?.controller.seek(Duration.zero);
       // playerOfIndex(oldIndex)?.controller.addListener(_didUpdateValue);
       // playerOfIndex(oldIndex)?.showPauseIcon.addListener(_didUpdateValue);
       playerOfIndex(oldIndex)?.pause();
       print('暂停$oldIndex');
     }
     // 开始播放当前的视频
-    playerOfIndex(newIndex)?.controller.addListener(_didUpdateValue);
+    playerOfIndex(newIndex)?.controller.stream.position.listen((p) {
+      notifyListeners();
+    });
     playerOfIndex(newIndex)?.showPauseIcon.addListener(_didUpdateValue);
     playerOfIndex(newIndex)?.play();
     print('播放$newIndex');
@@ -63,7 +65,7 @@ class TikTokVideoListController extends ChangeNotifier {
       /// i > newIndex + disposeCount 向上滑动，同时避免disposeCount设置为0时失去视频预加载功能
       if (i < newIndex - disposeCount || i > newIndex + max(disposeCount, 2)) {
         print('释放$i');
-        playerOfIndex(i)?.controller.removeListener(_didUpdateValue);
+        // playerOfIndex(i)?.controller.removeListener(_didUpdateValue);
         playerOfIndex(i)?.showPauseIcon.removeListener(_didUpdateValue);
         playerOfIndex(i)?.dispose();
         continue;
@@ -94,7 +96,7 @@ class TikTokVideoListController extends ChangeNotifier {
   }
 
   /// 获取指定index的player
-  VPVideoController? playerOfIndex(int index) {
+  MKVideoController? playerOfIndex(int index) {
     if (index < 0 || index > playerList.length - 1) {
       return null;
     }
@@ -107,7 +109,7 @@ class TikTokVideoListController extends ChangeNotifier {
   /// 初始化
   init({
     required PageController pageController,
-    required List<VPVideoController> initialList,
+    required List<MKVideoController> initialList,
     required LoadMoreVideo videoProvider,
   }) async {
     playerList.addAll(initialList);
@@ -126,10 +128,10 @@ class TikTokVideoListController extends ChangeNotifier {
   ValueNotifier<int> index = ValueNotifier<int>(0);
 
   /// 视频列表
-  List<VPVideoController> playerList = [];
+  List<MKVideoController> playerList = [];
 
   ///
-  VPVideoController get currentPlayer => playerList[index.value];
+  MKVideoController get currentPlayer => playerList[index.value];
 
   /// 销毁全部
   void dispose() {
@@ -170,23 +172,23 @@ abstract class TikTokVideoController<T> {
 /// 异步方法并发锁
 Completer<void>? _syncLock;
 
-class VPVideoController extends TikTokVideoController<VideoPlayerController> {
-  VideoPlayerController? _controller;
+class MKVideoController extends TikTokVideoController<Player> {
+  Player? _controller;
   ValueNotifier<bool> _showPauseIcon = ValueNotifier<bool>(false);
 
   final UserVideo? videoInfo;
 
-  final ControllerBuilder<VideoPlayerController> _builder;
-  final ControllerSetter<VideoPlayerController>? _afterInit;
-  VPVideoController({
+  final ControllerBuilder<Player> _builder;
+  final ControllerSetter<Player>? _afterInit;
+  MKVideoController({
     this.videoInfo,
-    required ControllerBuilder<VideoPlayerController> builder,
-    ControllerSetter<VideoPlayerController>? afterInit,
+    required ControllerBuilder<Player> builder,
+    ControllerSetter<Player>? afterInit,
   })  : this._builder = builder,
         this._afterInit = afterInit;
 
   @override
-  VideoPlayerController get controller {
+  Player get controller {
     if (_controller == null) {
       _controller = _builder.call();
     }
@@ -228,14 +230,16 @@ class VPVideoController extends TikTokVideoController<VideoPlayerController> {
 
   @override
   Future<void> init({
-    ControllerSetter<VideoPlayerController>? afterInit,
+    ControllerSetter<Player>? afterInit,
   }) async {
     if (prepared) return;
     await _syncCall(() async {
       print('+++initialize ${this.hashCode}');
-      await this.controller.initialize();
-      await this.controller.setLooping(true);
+      print('播放:${videoInfo?.url}');
       afterInit ??= this._afterInit;
+      await this.controller.setPlaylistMode(PlaylistMode.loop);
+      final playable = Media(videoInfo?.url ?? '');
+      await this.controller.open(playable, play: false);
       await afterInit?.call(this.controller);
       print('+++==initialize ${this.hashCode}');
       _prepared = true;

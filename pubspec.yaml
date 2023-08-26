@@ -30,7 +30,9 @@ dependencies:
   # 加载动画库
   flutter_spinkit: ^5.0.0
   # 播放器
-  video_player: ^2.4.1
+  media_kit: ^1.1.6                              # Primary package.
+  media_kit_video: ^1.1.7                        # For video rendering.
+  media_kit_libs_video: ^1.0.0 
 
 dev_dependencies:
   flutter_test:
